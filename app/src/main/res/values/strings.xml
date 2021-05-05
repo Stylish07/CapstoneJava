@@ -1,0 +1,6 @@
+<resources>
+    <string name="app_name">CapstoneJAVA</string>
+    <string name="btnParsing">실시간 응급실 정보 조회하기</string>
+
+
+</resources>
