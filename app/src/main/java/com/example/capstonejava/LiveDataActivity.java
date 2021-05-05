@@ -3,6 +3,7 @@ package com.example.capstonejava;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
@@ -24,6 +25,7 @@ public class LiveDataActivity extends AppCompatActivity {
     String callBackUrl = "http://apis.data.go.kr/B552657/ErmctInfoInqireService/getEmrrmRltmUsefulSckbdInfoInqire?";
     String serviceKey = "serviceKey=4NaBv4lhRmPGISwgpcWKZND8uajFXfEoUExAjER97oWKmchADrfyEjVYZ3EPdkrAnDl1BkTmqskPKNMydZcFIQ%3D%3D";
     String selectedStage1;
+    // String selectedStage2;
 
     String data;
 
@@ -37,28 +39,108 @@ public class LiveDataActivity extends AppCompatActivity {
 
         ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(this,
                 R.array.stage1, android.R.layout.simple_spinner_item);
-
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         binding.spinner.setAdapter(adapter);
 
-        ArrayAdapter<CharSequence> adapter2 = ArrayAdapter.createFromResource(this,
+        /*ArrayAdapter<CharSequence> adapter2 = ArrayAdapter.createFromResource(this,
                 R.array.stage2Seoul, android.R.layout.simple_spinner_item);
-
-        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        binding.spinner.setAdapter(adapter2);
-
+        adapter2.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        binding.spinner.setAdapter(adapter2);*/
 
         binding.spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
                 selectedStage1 = binding.spinner.getItemAtPosition(position).toString();
             }
-
             @Override
             public void onNothingSelected(AdapterView<?> parent) {
-
             }
         });
+
+        /*Log.d("에러", "여기까지 실행1");
+
+        switch (selectedStage1) {
+            case "서울":
+                // 초기설정임.
+                Log.d("에러", "여기까지 실행1.5");
+                break;
+            case "부산":
+                adapter2 = ArrayAdapter.createFromResource(this,
+                        R.array.stage2Busan, android.R.layout.simple_spinner_item);
+                break;
+            case "대구":
+                adapter2 = ArrayAdapter.createFromResource(this,
+                        R.array.stage2Daegu, android.R.layout.simple_spinner_item);
+                break;
+            case "인천":
+                adapter2 = ArrayAdapter.createFromResource(this,
+                        R.array.stage2Incheon, android.R.layout.simple_spinner_item);
+                break;
+            case "광주":
+                adapter2 = ArrayAdapter.createFromResource(this,
+                        R.array.stage2Kwangju, android.R.layout.simple_spinner_item);
+                break;
+            case "대전":
+                adapter2 = ArrayAdapter.createFromResource(this,
+                        R.array.stage2Daejeon, android.R.layout.simple_spinner_item);
+                break;
+            case "울산":
+                adapter2 = ArrayAdapter.createFromResource(this,
+                        R.array.stage2Ulsan, android.R.layout.simple_spinner_item);
+                break;
+            case "세종":
+                adapter2 = ArrayAdapter.createFromResource(this,
+                        R.array.stage2Sejong, android.R.layout.simple_spinner_item);
+                break;
+            case "경기":
+                adapter2 = ArrayAdapter.createFromResource(this,
+                        R.array.stage2Gyeonggi, android.R.layout.simple_spinner_item);
+                break;
+            case "강원":
+                adapter2 = ArrayAdapter.createFromResource(this,
+                        R.array.stage2Gangwon, android.R.layout.simple_spinner_item);
+                break;
+            case "충북":
+                adapter2 = ArrayAdapter.createFromResource(this,
+                        R.array.stage2Chungbuk, android.R.layout.simple_spinner_item);
+                break;
+            case "충남":
+                adapter2 = ArrayAdapter.createFromResource(this,
+                        R.array.stage2chungnam, android.R.layout.simple_spinner_item);
+                break;
+            case "전북":
+                adapter2 = ArrayAdapter.createFromResource(this,
+                        R.array.stage2Jeonbuk, android.R.layout.simple_spinner_item);
+                break;
+            case "전남":
+                adapter2 = ArrayAdapter.createFromResource(this,
+                        R.array.stage2Jeonnam, android.R.layout.simple_spinner_item);
+                break;
+            case "경북":
+                adapter2 = ArrayAdapter.createFromResource(this,
+                        R.array.stage2Kyeongbuk, android.R.layout.simple_spinner_item);
+                break;
+            case "경남":
+                adapter2 = ArrayAdapter.createFromResource(this,
+                        R.array.stage2Kyeongnam, android.R.layout.simple_spinner_item);
+                break;
+            case "제주":
+                adapter2 = ArrayAdapter.createFromResource(this,
+                        R.array.stage2Jeju, android.R.layout.simple_spinner_item);
+                break;
+            default:
+                Log.d("에러", "디폴트값으로 들어감");
+        }
+
+        binding.spinner2.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                selectedStage2 = binding.spinner2.getItemAtPosition(position).toString();
+            }
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {
+            }
+        });*/
 
         binding.btnParsing.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -85,7 +167,7 @@ public class LiveDataActivity extends AppCompatActivity {
     String getXmlData() {
         StringBuffer buffer=new StringBuffer();
 
-        String queryUrl = callBackUrl + "?" + serviceKey + "&STAGE1=" + selectedStage1 + "&numOfRows=100";
+        String queryUrl = "http://apis.data.go.kr/B552657/ErmctInfoInqireService/getEmrrmRltmUsefulSckbdInfoInqire?serviceKey=4NaBv4lhRmPGISwgpcWKZND8uajFXfEoUExAjER97oWKmchADrfyEjVYZ3EPdkrAnDl1BkTmqskPKNMydZcFIQ%3D%3D&STAGE1=%EC%84%9C%EC%9A%B8%ED%8A%B9%EB%B3%84%EC%8B%9C&STAGE2=%EA%B0%95%EB%82%A8%EA%B5%AC&pageNo=1&numOfRows=100";
 
         try {
             URL url= new URL(queryUrl);//문자열로 된 요청 url을 URL 객체로 생성.
