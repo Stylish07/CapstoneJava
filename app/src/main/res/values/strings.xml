@@ -1,6 +1,8 @@
 <resources>
     <string name="app_name">CapstoneJAVA</string>
-    <string name="btnParsing">실시간 응급실 정보 조회하기</string>
-
-
+    <string name="btnGoLive">지역별 실시간 정보 조회</string>
+    <string name="btnParsing">응급실 정보 조회</string>
+    <string name="btnGoMap">의료 서비스 지도로 보기</string>
+    <string name="title_activity_maps">Map</string>
+    <string name="title_activity_maps2">Map</string>
 </resources>
