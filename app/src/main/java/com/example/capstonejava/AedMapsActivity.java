@@ -29,6 +29,8 @@ import org.xmlpull.v1.XmlPullParserFactory;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.URL;
+import java.util.ArrayList;
+import java.util.List;
 
 public class AedMapsActivity extends AppCompatActivity implements AutoPermissionsListener {
 
@@ -40,7 +42,6 @@ public class AedMapsActivity extends AppCompatActivity implements AutoPermission
     double latitude = 37.4881325624879;
 
     MarkerOptions myLocationMarker;
-    MarkerOptions aedMarker;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -51,7 +52,6 @@ public class AedMapsActivity extends AppCompatActivity implements AutoPermission
         mapFragment.getMapAsync(new OnMapReadyCallback() {
             @Override
             public void onMapReady(GoogleMap googleMap) {
-                Log.d("Map", "지도 준비됨.");
                 map = googleMap;
             }
         });
@@ -71,14 +71,12 @@ public class AedMapsActivity extends AppCompatActivity implements AutoPermission
                 new Thread(new Runnable() {
                     @Override
                     public void run() {
-                        // 함수로 파싱해오기
-                        AEDInfo[] aedInfos = getXmlAed();
-                        // Log.d("에러", aedInfos[0].getBuildAddress());
+                        List<AEDInfo> aedInfoList = getXmlAed();
 
                         runOnUiThread(new Runnable() {
                             @Override
                             public void run() {
-                                showAedMarker(aedInfos);
+                                showAedMarker(aedInfoList);
                             }
                         });
                     }
@@ -89,12 +87,16 @@ public class AedMapsActivity extends AppCompatActivity implements AutoPermission
         AutoPermissions.Companion.loadAllPermissions(this, 101);
     }
 
-    AEDInfo[] getXmlAed() {
+    List<AEDInfo> getXmlAed() {
         StringBuffer buffer = new StringBuffer();
 
-        String queryUrl = aedCallBackUrl + "?serviceKey=" + serviceKey + "&WGS84_LON=" + longitude + "&WGS84_LAT=" + latitude + "&pageNo=1&numOfRows=10";
+        // String queryUrl = aedCallBackUrl + "?serviceKey=" + serviceKey + "&WGS84_LON=" + longitude + "&WGS84_LAT=" + latitude + "&pageNo=1&numOfRows=20";
+        String queryUrl = "http://apis.data.go.kr/B552657/AEDInfoInqireService/getAedLcinfoInqire?serviceKey=4NaBv4lhRmPGISwgpcWKZND8uajFXfEoUExAjER97oWKmchADrfyEjVYZ3EPdkrAnDl1BkTmqskPKNMydZcFIQ%3D%3D&WGS84_LON=127.085156592737&WGS84_LAT=37.4881325624879&pageNo=1&numOfRows=20";
 
-        AEDInfo[] aedInfos = new AEDInfo[10];
+        List<AEDInfo> aedInfoList = new ArrayList<>();
+
+        // AEDInfo aedInfo = new AEDInfo();
+        int i = 0;
 
         try {
             URL url= new URL(queryUrl);//문자열로 된 요청 url을 URL 객체로 생성.
@@ -105,54 +107,53 @@ public class AedMapsActivity extends AppCompatActivity implements AutoPermission
             XmlPullParser xpp= factory.newPullParser();
             xpp.setInput( new InputStreamReader(is, "UTF-8") ); //inputstream 으로부터 xml 입력받기
 
-            String tag;
-            int i = 0;
-
             xpp.next();
             int eventType= xpp.getEventType();
+            String tag = xpp.getName();
 
+            Log.d("인포리스트", "와일문 시작");
             while (eventType != XmlPullParser.END_DOCUMENT) {
-
-                aedInfos[i] = new AEDInfo();
+                AEDInfo aedInfo = new AEDInfo();
 
                 switch (eventType) {
                     case XmlPullParser.START_TAG:
-                        tag= xpp.getName();
+                        Log.d("인포리스트", "스타트 태그에 들어옴. 현재태그: " + tag);
 
                         switch (tag) {
+
                             case "buildAddress":
                                 xpp.next();
-                                aedInfos[i].setBuildAddress(xpp.getText());
+                                aedInfo.setBuildAddress(xpp.getText());
                                 break;
 
                             case "buildPlace":
                                 xpp.next();
-                                aedInfos[i].setBuildPlace(xpp.getText());
+                                aedInfo.setBuildPlace(xpp.getText());
                                 break;
 
                             case "clerkTel":
                                 xpp.next();
-                                aedInfos[i].setClerkTel(xpp.getText());
+                                aedInfo.setClerkTel(xpp.getText());
                                 break;
 
                             case "distance":
                                 xpp.next();
-                                aedInfos[i].setDistance(xpp.getText());
+                                aedInfo.setDistance(xpp.getText());
                                 break;
 
                             case "org":
                                 xpp.next();
-                                aedInfos[i].setOrg(xpp.getText());
+                                aedInfo.setOrg(xpp.getText());
                                 break;
 
                             case "wgs84Lat":
                                 xpp.next();
-                                aedInfos[i].setWgs84Lat(Double.parseDouble(xpp.getText()));
+                                aedInfo.setWgs84Lat(Double.parseDouble(xpp.getText()));
                                 break;
 
                             case "wgs84Lon":
                                 xpp.next();
-                                aedInfos[i].setWgs84Lon(Double.parseDouble(xpp.getText()));
+                                aedInfo.setWgs84Lon(Double.parseDouble(xpp.getText()));
                                 break;
                         }
                         break;
@@ -161,11 +162,10 @@ public class AedMapsActivity extends AppCompatActivity implements AutoPermission
                         break;
                     case XmlPullParser.END_TAG:
                         if (xpp.getName().equals("item")) {
-                            i++;
+                            aedInfoList.add(aedInfo);
                         }
                         break;
                 }
-
                 eventType = xpp.next();
             }
 
@@ -173,7 +173,16 @@ public class AedMapsActivity extends AppCompatActivity implements AutoPermission
             buffer.append("오류가 발생했습니다. 인터넷 또는 실행 환경을 점검해 주세요.");
         }
 
-        return aedInfos;
+        /*for (int j = 0; j < aedInfoList.size(); j++) {
+            Log.d("인포리스트", j + "번째");
+            Log.d("인포리스트", aedInfoList.get(j).getOrg());
+            Log.d("인포리스트", aedInfoList.get(j).getBuildAddress());
+            Log.d("인포리스트", aedInfoList.get(j).getBuildPlace());
+            Log.d("인포리스트", aedInfoList.get(j).getClerkTel());
+            Log.d("인포리스트", aedInfoList.get(j).getDistance());
+        }*/
+
+        return aedInfoList;
     }
 
     public class AEDInfo {
@@ -251,8 +260,6 @@ public class AedMapsActivity extends AppCompatActivity implements AutoPermission
                 latitude = location.getLatitude();
                 longitude = location.getLongitude();
                 String message = "최근 위치 -> Latitude : " + latitude + "\nLongitude:" + longitude;
-
-                Log.d("Map", message);
             }
 
             GPSListener gpsListener = new GPSListener();
@@ -277,7 +284,6 @@ public class AedMapsActivity extends AppCompatActivity implements AutoPermission
             longitude = location.getLongitude();
 
             String message = "내 위치 -> Latitude : "+ latitude + "\nLongitude:"+ longitude;
-            Log.d("Map", message);
 
             showCurrentLocation(latitude, longitude);
         }
@@ -309,13 +315,20 @@ public class AedMapsActivity extends AppCompatActivity implements AutoPermission
         }
     }
 
-    private void showAedMarker(AEDInfo[] aedInfos) {
-        aedMarker = new MarkerOptions();
-        LatLng aedPoint = new LatLng(aedInfos[0].getWgs84Lat(), aedInfos[0].getWgs84Lon());
-        aedMarker.position(aedPoint);
-        aedMarker.title(aedInfos[0].getOrg());
-        aedMarker.snippet(aedInfos[0].getBuildAddress() + "  " + aedInfos[0].getBuildPlace());
-        map.addMarker(aedMarker);
+    private void showAedMarker(List<AEDInfo> aedInfoList) {
+        MarkerOptions[] aedMarker = new MarkerOptions[aedInfoList.size()];
+        LatLng[] aedPoint = new LatLng[aedInfoList.size()];
+        int i = 0;
+
+        while (i < aedInfoList.size()) {
+            aedMarker[i] = new MarkerOptions();
+            aedPoint[i] = new LatLng(aedInfoList.get(i).getWgs84Lat(), aedInfoList.get(i).getWgs84Lon());
+            aedMarker[i].position(aedPoint[i]);
+            aedMarker[i].title(aedInfoList.get(i).getOrg());
+            aedMarker[i].snippet(aedInfoList.get(i).getBuildPlace() + "거리: " + aedInfoList.get(i).getDistance() + "km");
+            map.addMarker(aedMarker[i]);
+            i++;
+        }
     }
 
     @Override
