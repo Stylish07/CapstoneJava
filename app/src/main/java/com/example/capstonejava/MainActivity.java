@@ -32,7 +32,15 @@ public class MainActivity extends AppCompatActivity {
         binding.btnGoMap.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Intent intent = new Intent(MainActivity.this, MapsActivity2.class);
+                Intent intent = new Intent(MainActivity.this, MapsActivity3.class);
+                startActivity(intent);
+            }
+        });
+
+        binding.btnGoAED.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(MainActivity.this, AedMapsActivity.class);
                 startActivity(intent);
             }
         });

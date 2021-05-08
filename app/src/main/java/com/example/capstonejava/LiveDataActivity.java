@@ -74,7 +74,7 @@ public class LiveDataActivity extends AppCompatActivity {
     }
 
     String getXmlData() {
-        StringBuffer buffer=new StringBuffer();
+        StringBuffer buffer = new StringBuffer();
 
         String queryUrl = callBackUrl + "?serviceKey=" + serviceKey + "&STAGE1=" + selectedStage1 + "&pageNo=1&numOfRows=100";
         // String UrlSave = "http://apis.data.go.kr/B552657/ErmctInfoInqireService/getEmrrmRltmUsefulSckbdInfoInqire?serviceKey=4NaBv4lhRmPGISwgpcWKZND8uajFXfEoUExAjER97oWKmchADrfyEjVYZ3EPdkrAnDl1BkTmqskPKNMydZcFIQ%3D%3D&STAGE1=%EC%84%9C%EC%9A%B8%ED%8A%B9%EB%B3%84%EC%8B%9C&pageNo=1&numOfRows=100";

@@ -3,6 +3,7 @@
     <string name="btnGoLive">지역별 실시간 정보 조회</string>
     <string name="btnParsing">응급실 정보 조회</string>
     <string name="btnGoMap">의료 서비스 지도로 보기</string>
+    <string name="btnGoAED">내 주변 AED 찾기</string>
     <string name="title_activity_maps">Map</string>
     <string name="title_activity_maps2">Map</string>
 </resources>
