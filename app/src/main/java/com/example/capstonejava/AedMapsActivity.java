@@ -72,6 +72,8 @@ public class AedMapsActivity extends AppCompatActivity implements AutoPermission
                     @Override
                     public void run() {
                         List<AEDInfo> aedInfoList = getXmlAed();
+                        Log.d("서순", "인포리스트 크기 확인= " + aedInfoList.size());
+                        // 현재 null
 
                         runOnUiThread(new Runnable() {
                             @Override
@@ -95,9 +97,6 @@ public class AedMapsActivity extends AppCompatActivity implements AutoPermission
 
         List<AEDInfo> aedInfoList = new ArrayList<>();
 
-        // AEDInfo aedInfo = new AEDInfo();
-        int i = 0;
-
         try {
             URL url= new URL(queryUrl);//문자열로 된 요청 url을 URL 객체로 생성.
 
@@ -108,24 +107,20 @@ public class AedMapsActivity extends AppCompatActivity implements AutoPermission
             xpp.setInput( new InputStreamReader(is, "UTF-8") ); //inputstream 으로부터 xml 입력받기
 
             xpp.next();
-            int eventType= xpp.getEventType();
+            int eventType = xpp.getEventType();
             String tag = xpp.getName();
 
-            Log.d("인포리스트", "와일문 시작");
             while (eventType != XmlPullParser.END_DOCUMENT) {
-                AEDInfo aedInfo = new AEDInfo();
 
-                switch (eventType) {
-                    case XmlPullParser.START_TAG:
-                        Log.d("인포리스트", "스타트 태그에 들어옴. 현재태그: " + tag);
+                if (eventType == XmlPullParser.START_TAG && tag.equals("item")) {
+                    AEDInfo aedInfo = new AEDInfo();
+                    eventType = xpp.next();
+                    tag = xpp.getName();
+
+                    while (!(eventType == XmlPullParser.END_TAG && tag.equals("item"))) {
 
                         switch (tag) {
-
-                            case "buildAddress":
-                                xpp.next();
-                                aedInfo.setBuildAddress(xpp.getText());
-                                break;
-
+                            // xml 태그마다 클래스에 정보를 채워넣는 코드
                             case "buildPlace":
                                 xpp.next();
                                 aedInfo.setBuildPlace(xpp.getText());
@@ -155,52 +150,42 @@ public class AedMapsActivity extends AppCompatActivity implements AutoPermission
                                 xpp.next();
                                 aedInfo.setWgs84Lon(Double.parseDouble(xpp.getText()));
                                 break;
-                        }
-                        break;
 
-                    case XmlPullParser.TEXT:
-                        break;
-                    case XmlPullParser.END_TAG:
-                        if (xpp.getName().equals("item")) {
-                            aedInfoList.add(aedInfo);
+                            default:
+                                break;
                         }
-                        break;
+                        eventType = xpp.next();
+                        tag = xpp.getName();
+
+                        if (eventType == XmlPullParser.TEXT) {
+                            eventType = xpp.next();
+                            tag = xpp.getName();
+                        }
+
+                        if (eventType == XmlPullParser.END_TAG) {
+                            eventType = xpp.next();
+                            tag = xpp.getName();
+                        }
+                    }
+                    aedInfoList.add(aedInfo);
                 }
                 eventType = xpp.next();
+                tag = xpp.getName();
             }
 
         }catch (Exception e) {
             buffer.append("오류가 발생했습니다. 인터넷 또는 실행 환경을 점검해 주세요.");
         }
-
-        /*for (int j = 0; j < aedInfoList.size(); j++) {
-            Log.d("인포리스트", j + "번째");
-            Log.d("인포리스트", aedInfoList.get(j).getOrg());
-            Log.d("인포리스트", aedInfoList.get(j).getBuildAddress());
-            Log.d("인포리스트", aedInfoList.get(j).getBuildPlace());
-            Log.d("인포리스트", aedInfoList.get(j).getClerkTel());
-            Log.d("인포리스트", aedInfoList.get(j).getDistance());
-        }*/
-
         return aedInfoList;
     }
 
     public class AEDInfo {
-        String buildAddress;
         String buildPlace;
         String clerkTel;
         String distance;
         String org;
         double wgs84Lat;
         double wgs84Lon;
-
-        public String getBuildAddress() {
-            return buildAddress;
-        }
-
-        public void setBuildAddress(String buildAddress) {
-            this.buildAddress = buildAddress;
-        }
 
         public String getBuildPlace() {
             return buildPlace;
@@ -316,18 +301,13 @@ public class AedMapsActivity extends AppCompatActivity implements AutoPermission
     }
 
     private void showAedMarker(List<AEDInfo> aedInfoList) {
-        MarkerOptions[] aedMarker = new MarkerOptions[aedInfoList.size()];
-        LatLng[] aedPoint = new LatLng[aedInfoList.size()];
-        int i = 0;
-
-        while (i < aedInfoList.size()) {
-            aedMarker[i] = new MarkerOptions();
-            aedPoint[i] = new LatLng(aedInfoList.get(i).getWgs84Lat(), aedInfoList.get(i).getWgs84Lon());
-            aedMarker[i].position(aedPoint[i]);
-            aedMarker[i].title(aedInfoList.get(i).getOrg());
-            aedMarker[i].snippet(aedInfoList.get(i).getBuildPlace() + "거리: " + aedInfoList.get(i).getDistance() + "km");
-            map.addMarker(aedMarker[i]);
-            i++;
+        for (int i = 0; i < aedInfoList.size(); i++) {
+            MarkerOptions aedMakers = new MarkerOptions();
+            LatLng latLng = new LatLng(aedInfoList.get(i).getWgs84Lat(), aedInfoList.get(i).getWgs84Lon());
+            aedMakers.position(latLng);
+            aedMakers.title(aedInfoList.get(i).getOrg());
+            aedMakers.snippet(aedInfoList.get(i).getBuildPlace() + ", " + aedInfoList.get(i).getClerkTel() + ".  남은거리: " + aedInfoList.get(i).getDistance());
+            map.addMarker(aedMakers);
         }
     }
 
