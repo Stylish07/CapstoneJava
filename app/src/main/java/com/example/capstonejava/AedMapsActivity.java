@@ -17,6 +17,7 @@ import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.MapsInitializer;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.pedro.library.AutoPermissions;
@@ -72,8 +73,6 @@ public class AedMapsActivity extends AppCompatActivity implements AutoPermission
                     @Override
                     public void run() {
                         List<AEDInfo> aedInfoList = getXmlAed();
-                        Log.d("서순", "인포리스트 크기 확인= " + aedInfoList.size());
-                        // 현재 null
 
                         runOnUiThread(new Runnable() {
                             @Override
@@ -91,17 +90,13 @@ public class AedMapsActivity extends AppCompatActivity implements AutoPermission
 
     List<AEDInfo> getXmlAed() {
         StringBuffer buffer = new StringBuffer();
-
-        // String queryUrl = aedCallBackUrl + "?serviceKey=" + serviceKey + "&WGS84_LON=" + longitude + "&WGS84_LAT=" + latitude + "&pageNo=1&numOfRows=20";
-        String queryUrl = "http://apis.data.go.kr/B552657/AEDInfoInqireService/getAedLcinfoInqire?serviceKey=4NaBv4lhRmPGISwgpcWKZND8uajFXfEoUExAjER97oWKmchADrfyEjVYZ3EPdkrAnDl1BkTmqskPKNMydZcFIQ%3D%3D&WGS84_LON=127.085156592737&WGS84_LAT=37.4881325624879&pageNo=1&numOfRows=20";
+        String queryUrl = aedCallBackUrl + "?serviceKey=" + serviceKey + "&WGS84_LON=" + longitude + "&WGS84_LAT=" + latitude + "&pageNo=1&numOfRows=20";
 
         List<AEDInfo> aedInfoList = new ArrayList<>();
 
         try {
             URL url= new URL(queryUrl);//문자열로 된 요청 url을 URL 객체로 생성.
-
             InputStream is= url.openStream(); //url위치로 입력스트림 연결
-
             XmlPullParserFactory factory= XmlPullParserFactory.newInstance();
             XmlPullParser xpp= factory.newPullParser();
             xpp.setInput( new InputStreamReader(is, "UTF-8") ); //inputstream 으로부터 xml 입력받기
@@ -289,10 +284,11 @@ public class AedMapsActivity extends AppCompatActivity implements AutoPermission
 
     private void showMyLocationMarker(LatLng curPoint) {
         if (myLocationMarker == null) {
-            myLocationMarker = new MarkerOptions();
-            myLocationMarker.position(curPoint);
-            myLocationMarker.title("내 위치\n");
-            myLocationMarker.snippet(" GPS로 확인한 위치 ");
+            myLocationMarker = new MarkerOptions()
+                    .position(curPoint)
+                    .title("내 위치\n")
+                    .snippet(" GPS로 확인한 위치 ")
+                    .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_BLUE));
             map.addMarker(myLocationMarker);
         }
         else {
@@ -306,7 +302,7 @@ public class AedMapsActivity extends AppCompatActivity implements AutoPermission
             LatLng latLng = new LatLng(aedInfoList.get(i).getWgs84Lat(), aedInfoList.get(i).getWgs84Lon());
             aedMakers.position(latLng);
             aedMakers.title(aedInfoList.get(i).getOrg());
-            aedMakers.snippet(aedInfoList.get(i).getBuildPlace() + ", " + aedInfoList.get(i).getClerkTel() + ".  남은거리: " + aedInfoList.get(i).getDistance());
+            aedMakers.snippet(aedInfoList.get(i).getBuildPlace() + ", " + aedInfoList.get(i).getClerkTel() + ".  남은거리: " + aedInfoList.get(i).getDistance() + "km");
             map.addMarker(aedMakers);
         }
     }

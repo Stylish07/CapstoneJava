@@ -21,6 +21,7 @@ import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.MapsInitializer;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.pedro.library.AutoPermissions;
@@ -40,13 +41,12 @@ public class MapsActivity3 extends AppCompatActivity implements AutoPermissionsL
     SupportMapFragment mapFragment;
     GoogleMap map;
     MarkerOptions myLocationMarker;
-    MarkerOptions hospitalMarker;
 
     String callBackUri = "http://apis.data.go.kr/B552657/ErmctInfoInqireService/getEgytLcinfoInqire";
     String serviceKey = "4NaBv4lhRmPGISwgpcWKZND8uajFXfEoUExAjER97oWKmchADrfyEjVYZ3EPdkrAnDl1BkTmqskPKNMydZcFIQ%3D%3D";
 
-    double latitudeCur;
-    double longitudeCur;
+    double latitude;
+    double longitude;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -74,21 +74,15 @@ public class MapsActivity3 extends AppCompatActivity implements AutoPermissionsL
             @Override
             public void onClick(View v) {
                 startLocationService();
-
-                // xml로부터 정보 가져오기
                 new Thread(new Runnable() {
                     @Override
                     public void run() {
-
-                        HospitalInfo[] hospitalInfos = new HospitalInfo[100];
-
+                        List<HospitalInfo> hospitalInfoList = getXmlData();
 
                         runOnUiThread(new Runnable() {
                             @Override
                             public void run() {
-
-
-                                // showHospitalsMarker(hospitalInfos);
+                                showHospitalsMarker(hospitalInfoList);
                             }
                         });
                     }
@@ -130,13 +124,13 @@ public class MapsActivity3 extends AppCompatActivity implements AutoPermissionsL
 
     class GPSListener implements LocationListener {
         public void onLocationChanged(Location location) {
-            latitudeCur = location.getLatitude();
-            longitudeCur = location.getLongitude();
+            latitude = location.getLatitude();
+            longitude = location.getLongitude();
 
-            String message = "내 위치 -> Latitude : "+ latitudeCur + "\nLongitude:"+ longitudeCur;
+            String message = "내 위치 -> Latitude : "+ latitude + "\nLongitude:"+ longitude;
             Log.d("Map", message);
 
-            showCurrentLocation(latitudeCur, longitudeCur);
+            showCurrentLocation(latitude, longitude);
         }
 
         public void onProviderDisabled(String provider) { }
@@ -154,10 +148,11 @@ public class MapsActivity3 extends AppCompatActivity implements AutoPermissionsL
 
     private void showMyLocationMarker(LatLng curPoint) {
         if (myLocationMarker == null) {
-            myLocationMarker = new MarkerOptions();
-            myLocationMarker.position(curPoint);
-            myLocationMarker.title("내 위치\n");
-            myLocationMarker.snippet(" GPS로 확인한 위치 ");
+            myLocationMarker = new MarkerOptions()
+                    .position(curPoint)
+                    .title("내 위치\n")
+                    .snippet(" GPS로 확인한 위치 ")
+                    .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_BLUE));
             map.addMarker(myLocationMarker);
         }
         else {
@@ -165,16 +160,14 @@ public class MapsActivity3 extends AppCompatActivity implements AutoPermissionsL
         }
     }
 
-    private void showHospitalsMarker(HospitalInfo[] hospitalInfos) {
-        int i = 0;
-        while (hospitalInfos[i].getDutyName().equals("")) {
-            hospitalMarker = new MarkerOptions();
-            LatLng hosPosition = new LatLng(hospitalInfos[i].getLatitude(), hospitalInfos[i].getLongitude());
-            hospitalMarker.position(hosPosition);
-            hospitalMarker.title(hospitalInfos[i].getDutyName());
-            hospitalMarker.snippet(hospitalInfos[i].getDutyAddr() + hospitalInfos[i].getDutyTel1());
-            map.addMarker(hospitalMarker);
-            i++;
+    private void showHospitalsMarker(List<HospitalInfo> hospitalInfoList) {
+        for (int i = 0; i < hospitalInfoList.size(); i++) {
+            MarkerOptions aedMakers = new MarkerOptions();
+            LatLng latLng = new LatLng(hospitalInfoList.get(i).getLatitude(), hospitalInfoList.get(i).getLongitude());
+            aedMakers.position(latLng);
+            aedMakers.title(hospitalInfoList.get(i).getDutyName());
+            aedMakers.snippet(hospitalInfoList.get(i).getDutyTel1() + "거리: " + hospitalInfoList.get(i).getDistance());
+            map.addMarker(aedMakers);
         }
     }
 
@@ -195,142 +188,87 @@ public class MapsActivity3 extends AppCompatActivity implements AutoPermissionsL
         Toast.makeText(this, "permissions granted : " + permissions.length, Toast.LENGTH_LONG).show();
     }
 
-    HospitalInfo[] getXmlData(HospitalInfo[] hospitalInfos) {
+    List<HospitalInfo> getXmlData() {
         StringBuffer buffer = new StringBuffer();
+        String queryUrl = callBackUri + "?serviceKey=" + serviceKey + "&WGS84_LON=" + longitude + "&WGS84_LAT=" + latitude + "&pageNo=1&numOfRows=20";
 
-        // String queryUrl = callBackUri + "?serviceKey=" + serviceKey + "&WGS84_LON=" + longitudeCur + "&WGS84_LAT=" + latitudeCur + "&pageNo=1&numOfRows=100";
-
-        String queryUrl = "http://apis.data.go.kr/B552657/ErmctInfoInqireService/getEgytLcinfoInqire?serviceKey=4NaBv4lhRmPGISwgpcWKZND8uajFXfEoUExAjER97oWKmchADrfyEjVYZ3EPdkrAnDl1BkTmqskPKNMydZcFIQ%3D%3D&WGS84_LON=127.08515659273706&WGS84_LAT=37.488132562487905&pageNo=1&numOfRows=100";
-
-        // HospitalInfo[] hospitalInfos = new HospitalInfo[100]; 함수 바꿔서 주석(삭제)처리
-
-        Log.d("에러", "클래스배열 100칸 생성되었습니다.");
+        List<HospitalInfo> hospitalInfoList = new ArrayList<>();
 
         try {
             URL url = new URL(queryUrl);//문자열로 된 요청 url을 URL 객체로 생성.
-
             InputStream is = url.openStream(); //url위치로 입력스트림 연결
-
             XmlPullParserFactory factory = XmlPullParserFactory.newInstance();
             XmlPullParser xpp = factory.newPullParser();
             xpp.setInput(new InputStreamReader(is, "UTF-8")); //inputstream 으로부터 xml 입력받기
 
-            String tag;
-
             xpp.next();
             int eventType = xpp.getEventType();
-            int i = 0;
-
-            Log.d("에러", "try문 진입완료. 와일문 시작합니다.");
-
-            // 스타트도큐0, 엔드도큐1, 스타트태그2, 엔드태그3, 텍스트4
+            String tag = xpp.getName();
 
             while (eventType != XmlPullParser.END_DOCUMENT) {
+                if (eventType == XmlPullParser.START_TAG && tag.equals("item")) {
+                    HospitalInfo hospitalInfo = new HospitalInfo();
+                    eventType = xpp.next();
+                    tag = xpp.getName();
 
-                Log.d("에러", "와일문 시작 현재 이벤트타입 = " + eventType + "   i값 = " + i);
-                switch (eventType) {
-                    case XmlPullParser.START_TAG:
-                        tag = xpp.getName();
-
-                        Log.d("에러", "현재 태그는 = " + tag);
+                    while (!(eventType == XmlPullParser.END_TAG && tag.equals("item"))) {
                         switch (tag) {
-                            case "distance":
-                                xpp.next();
-                                buffer.append(xpp.getText());
-                                hospitalInfos[i] = new HospitalInfo();
-                                hospitalInfos[i].setDistance(xpp.getText());
-
-                                Log.d("에러", hospitalInfos[i].getDistance());
-                                break;
-                            case "dutyAddr":
-                                xpp.next();
-                                hospitalInfos[i] = new HospitalInfo();
-                                hospitalInfos[i].setDutyAddr(xpp.getText());
-
-                                Log.d("에러", hospitalInfos[i].getDutyAddr());
-                                break;
                             case "dutyName":
                                 xpp.next();
-                                hospitalInfos[i] = new HospitalInfo();
-                                hospitalInfos[i].setDutyName(xpp.getText());
-
-                                Log.d("에러", hospitalInfos[i].getDutyName());
+                                hospitalInfo.setDutyName(xpp.getText());
                                 break;
+
+                            case "distance":
+                                xpp.next();
+                                hospitalInfo.setDistance(xpp.getText());
+                                break;
+
                             case "dutyTel1":
                                 xpp.next();
-                                hospitalInfos[i] = new HospitalInfo();
-                                hospitalInfos[i].setDutyTel1(xpp.getText());
-
-                                Log.d("에러", hospitalInfos[i].getDutyTel1());
+                                hospitalInfo.setDutyTel1(xpp.getText());
                                 break;
-                            case "endTime":
-                                xpp.next();
-                                hospitalInfos[i] = new HospitalInfo();
-                                hospitalInfos[i].setEndTime(xpp.getText());
 
-                                Log.d("에러", hospitalInfos[i].getEndTime());
-                                break;
                             case "latitude":
                                 xpp.next();
-                                hospitalInfos[i] = new HospitalInfo();
-                                hospitalInfos[i].setLatitude(Double.parseDouble(xpp.getText()));
-
+                                hospitalInfo.setLatitude(Double.parseDouble(xpp.getText()));
                                 break;
+
                             case "longitude":
                                 xpp.next();
-                                hospitalInfos[i] = new HospitalInfo();
-                                hospitalInfos[i].setLongitude(Double.parseDouble(xpp.getText()));
-
-                                break;
-                            case "startTime":
-                                xpp.next();
-                                hospitalInfos[i] = new HospitalInfo();
-                                hospitalInfos[i].setStartTime(xpp.getText());
-
-                                Log.d("에러", hospitalInfos[i].getStartTime());
-                                break;
-                            default:
-                                Log.d("에러", "찾는 태그가 아닙니다. 현재 태그 = " + tag);
+                                hospitalInfo.setLongitude(Double.parseDouble(xpp.getText()));
                                 break;
                         }
-
-                        Log.d("에러", "스타트태그 탈출합니다.");
-                        break;
-
-                    case XmlPullParser.TEXT:
-                        Log.d("에러", "텍스트 부분 브레이크.");
-                        break;
-
-                    case XmlPullParser.END_TAG:
+                        eventType = xpp.next();
                         tag = xpp.getName();
-                        if (tag.equals("item")) {
-                            i++;
+
+                        if (eventType == XmlPullParser.TEXT) {
+                            eventType = xpp.next();
+                            tag = xpp.getName();
                         }
-                        Log.d("에러", "엔드태그. i++합니다. i값 = " + i + "태그이름: /" + tag);
-                        break;
+
+                        if (eventType == XmlPullParser.END_TAG) {
+                            eventType = xpp.next();
+                            tag = xpp.getName();
+                        }
+                    }
+                    hospitalInfoList.add(hospitalInfo);
                 }
                 eventType = xpp.next();
+                tag = xpp.getName();
             }
-
-            Log.d("에러", "와일문 끝난 직후입니다.");
         }
         catch (Exception e) {
             buffer.append("오류가 발생했습니다. 인터넷 또는 실행 환경을 점검해 주세요.");
         }
-        Log.d("에러", "리턴 직전입니다.");
-
-        return hospitalInfos;
+        return hospitalInfoList;
     }
 
     class HospitalInfo {
-        String dutyName = "";
-        String startTime = "";
-        String endTime = "";
-        String dutyAddr = "";
-        String distance = "";
-        String dutyTel1 = "";
-        double latitude = 0.0;
-        double longitude = 0.0;
+        String dutyName;
+        String distance;
+        String dutyTel1;
+        double latitude;
+        double longitude;
 
         public String getDutyName() {
             return dutyName;
@@ -338,30 +276,6 @@ public class MapsActivity3 extends AppCompatActivity implements AutoPermissionsL
 
         public void setDutyName(String dutyName) {
             this.dutyName = dutyName;
-        }
-
-        public String getStartTime() {
-            return startTime;
-        }
-
-        public void setStartTime(String startTime) {
-            this.startTime = startTime;
-        }
-
-        public String getEndTime() {
-            return endTime;
-        }
-
-        public void setEndTime(String endTime) {
-            this.endTime = endTime;
-        }
-
-        public String getDutyAddr() {
-            return dutyAddr;
-        }
-
-        public void setDutyAddr(String dutyAddr) {
-            this.dutyAddr = dutyAddr;
         }
 
         public String getDistance() {
